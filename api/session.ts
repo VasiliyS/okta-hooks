@@ -8,8 +8,8 @@ export default function (req: VercelRequest, res: VercelResponse) {
     res.json(returnValue);
   } else if (req.method === 'POST'){
       console.log('incoming post request')
-      console.log(`request parameters ${req.query}`)
-      res.status(200);
+      console.log(`request parameters ${req.url}`)
+      res.status(200)
   } else {
     res.status(404).json({ error: 'This request is not supported' });
   }
