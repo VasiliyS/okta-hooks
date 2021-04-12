@@ -1,5 +1,6 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
-import okta from "@okta/okta-sdk-nodejs";
+import * as okta from "@okta/okta-sdk-nodejs";
+import * as oktaEvent from "@okta/okta-sdk-nodejs/src/types/models/LogEvent"
 
 // populate Org URL and Token from env variables
 // OKTA_CLIENT_ORGURL=https://dev-1234.oktapreview.com/
@@ -11,7 +12,7 @@ const oktaClient = new okta.Client({
   //cacheMiddleware: null
 });
 
-export default async function (req: VercelRequest, res: VercelResponse) {
+export default function (req: VercelRequest, res: VercelResponse) {
   // Okta EventHook verification Logic
   if (req.method === "GET") {
     const returnValue = {
@@ -30,12 +31,13 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       const events = req.body?.data?.events;
       // Okta can batch events, so if multiple users log out we'll need to 'suspend' them all
       console.log(`received ${events.length} events`);
-      events?.forEach((event) => {
+      events?.forEach((event : oktaEvent.LogEvent) => {
         console.log(
           `Processing event: ${event.eventType} for user with id: ${event.actor.id}`
         );
         if (event.eventType === "user.session.end") {
-          suspendUser(event.actor.id);
+          suspendUser(event.actor.id)
+          .then(res => console.log(`suspendUser returned: ${res}`));
         }
       });
     }
@@ -50,7 +52,9 @@ async function suspendUser(id: string) {
   try {
     let resp = await oktaClient.suspendUser(id);
     console.log(`Success suspending User with id "${id}"), response: ${resp} `);
+    return true;
   } catch (err) {
     console.log(`Error suspending User with id(${id}), received: ${err} `);
+    return false;
   }
 }
