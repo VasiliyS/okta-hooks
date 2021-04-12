@@ -1,4 +1,15 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
+import okta  from "@okta/okta-sdk-nodejs";
+
+// populate Org URL and Token from env variables
+  // OKTA_CLIENT_ORGURL=https://dev-1234.oktapreview.com/
+  // OKTA_CLIENT_TOKEN=xYzabc
+  const oktaClient = new okta.Client({
+      orgUrl: process.env.OKTA_CLIENT_ORGURL,
+      token: process.env.OKTA_CLIENT_TOKEN
+    // calling from a function, no need to cache 
+    //cacheMiddleware: null
+  });
 
 export default function (req: VercelRequest, res: VercelResponse) {
   // Okta EventHook verification Logic
@@ -32,23 +43,17 @@ export default function (req: VercelRequest, res: VercelResponse) {
   }
 }
 
-import {Client} from "@okta/okta-sdk-nodejs";
-// populate Org URL and Token from env variables
-  // OKTA_CLIENT_ORGURL=https://dev-1234.oktapreview.com/
-  // OKTA_CLIENT_TOKEN=xYzabc
-  const client = new Client({
-    // calling from a function, no need to cache 
-    cacheMiddleware: null
-  });
+
 
 function suspendUser(id: string): boolean{
-  client.suspendUser(id)
-    .then(function(){
+  console.log(`Trying to suspend a USer with id(${id})`)
+  oktaClient.suspendUser(id)
+    .then(() => {
       console.log(`Success suspending User with id(${id})`);
     })
     .catch( err => {
       console.log(`Error suspending User with id(${id}), received: ${err} `);
       return false;
-    })
+    });
   return true;
 }
