@@ -48,7 +48,8 @@ export default function (req: VercelRequest, res: VercelResponse) {
 }
 
 async function suspendUser(id: string) {
-  console.log(`Trying to suspend a User with id "${id}"`);
+  console.log(`Trying to suspend a User with id "${id}", OrgUrl is: ${oktaClient.baseUrl}`);
+
   try {
     let resp = await oktaClient.suspendUser(id);
     console.log(`Success suspending User with id "${id}"), response: ${resp} `);
