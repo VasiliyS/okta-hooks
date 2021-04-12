@@ -18,8 +18,9 @@ export default function (req: VercelRequest, res: VercelResponse) {
         //look for logout event and suspend user to prevent login 
         const events = req.body?.data?.events;
         // Okta can batch events, so if multiple users log out we'll need to 'suspend' them all
+        console.log(`received ${events.length} events`);
         events?.forEach(event => {
-          if(event.evenType === 'user.session.end'){
+          if(event.eventType === "user.session.end"){
             suspendUser(event.actor.id);
           }
         });
