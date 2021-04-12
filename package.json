@@ -17,6 +17,7 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
+    "@okta/okta-sdk-nodejs": "^4.5.1",
     "sirv-cli": "^1.0.0"
   }
 }
