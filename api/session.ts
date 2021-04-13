@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
-import * as okta from "@okta/okta-sdk-nodejs";
 import * as oktaEvent from "@okta/okta-sdk-nodejs/src/types/models/LogEvent"
+const okta = require("@okta/okta-sdk-nodejs");
 
 // populate Org URL and Token from env variables
 // OKTA_CLIENT_ORGURL=https://dev-1234.oktapreview.com/
