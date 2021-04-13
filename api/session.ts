@@ -1,6 +1,7 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import * as oktaEvent from "@okta/okta-sdk-nodejs/src/types/models/LogEvent";
 import okta from "@okta/okta-sdk-nodejs";
+import {log, LogLevel} from "./utils";
 
 // populate Org URL and Token from env variables
 // OKTA_CLIENT_ORGURL=https://dev-1234.oktapreview.com/
@@ -11,19 +12,6 @@ const oktaClient = new okta.Client({
   // calling from a function, no need to cache
   //cacheMiddleware: null
 });
-
-//quick and dirty debugging help
-enum LogLevel {
-  Production, // Errors Only
-  Info,
-  Detailed
-}
-const debugLevel = parseInt(process.env.DEBUG_LEVEL || "0", 10);
-const log = (logLevel: LogLevel, ...args) => {
-    if( debugLevel >= logLevel){
-      console.log(...args);
-    }
-};
 
 
 export default async function (req: VercelRequest, res: VercelResponse) {
