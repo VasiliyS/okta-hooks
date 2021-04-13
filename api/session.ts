@@ -20,7 +20,7 @@ enum LogLevel {
 }
 const debugLevel = parseInt(process.env.DEBUG_LEVEL || "0", 10);
 const log = (logLevel: LogLevel, ...args) => {
-    if(logLevel >= debugLevel){
+    if( debugLevel >= logLevel){
       console.log(...args);
     }
 };
@@ -44,15 +44,13 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       const events = req.body?.data?.events;
       // Okta can batch events, so if multiple users log out we'll need to 'suspend' them all
       log(LogLevel.Info,`received ${events.length} events`);
-      events?.forEach(async (event: oktaEvent.LogEvent, num: number) => {
-        log(LogLevel.Info,
-          `Processing event #${num}: ${event.eventType} for user with id: ${event.actor.id}`
-        );
-        if (event.eventType === "user.session.end") {
-          let resp = await suspendUser(event.actor.id);
+      for(let i in events){
+        log(LogLevel.Info,`Processing event #${i}: ${events[i].eventType} for user with id: ${events[i].actor.id}`);
+        if (events[i].eventType === "user.session.end") {
+          let resp = await suspendUser(events[i].actor.id);
           log(LogLevel.Info,`suspendUser returned: ${resp}`);
         }
-      });
+      }
     }
     res.status(200).end();
   } else {
@@ -61,9 +59,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 }
 
 async function suspendUser(id: string) {
-  console.log(LogLevel.Detailed,
-    `Trying to suspend a User with id "${id}", OrgUrl is: ${oktaClient.baseUrl}`
-  );
+  log(LogLevel.Detailed,`Trying to suspend a User with id "${id}", OrgUrl is: ${oktaClient.baseUrl}`);
   try {
     let resp = await oktaClient.suspendUser(id);
     log(LogLevel.Detailed,`Success suspending User with id "${id}"), response: ${resp} `);
