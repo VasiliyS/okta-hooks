@@ -1,7 +1,7 @@
 export enum LogLevel {
     Production, // Errors Only
     Info,
-    Detailed
+    Debug
   }
   const debugLevel = parseInt(process.env.DEBUG_LEVEL || "0", 10);
   export const log = (logLevel: LogLevel, ...args) => {
