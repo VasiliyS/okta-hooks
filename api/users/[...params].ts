@@ -24,7 +24,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
     console.log(`"${k}" = ${req.query[k]}`);
   }
 
-  log(LogLevel.Debug,`params is: ${params});
+  log(LogLevel.Debug,`params is: ${params}`);
   try {
     if (req.method === "GET") {
       log(LogLevel.Debug, `Performing GET on URI ${req.url}`);
