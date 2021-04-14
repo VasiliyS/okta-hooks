@@ -26,10 +26,10 @@ export default async function (req: VercelRequest, resp: VercelResponse) {
   try {
     if (req.method === "GET") {
       log(LogLevel.Debug, `Performing GET on URI ${req.url}`);
-      handleUserGet( req, resp);
+      await handleUserGet( req, resp);
     } else if (req.method === "POST") {
       log(LogLevel.Debug, `Performing POST on URI ${req.url}`);
-      handleUsersPost( req, resp);
+      await handleUsersPost( req, resp);
     } else {
       resp.status(405).json({ error: "This request is not supported" });
     }
