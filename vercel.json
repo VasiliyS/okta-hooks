@@ -1,0 +1,5 @@
+{
+    "rewrites": [
+      { "source": "/api/users/:id/:res?/:action?", "destination": "/api/users/handler" }
+    ]
+  }
