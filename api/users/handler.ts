@@ -12,45 +12,42 @@ const oktaClient = new okta.Client({
   //cacheMiddleware: null,
 });
 
-export default async function (req: VercelRequest, res: VercelResponse) {
+export default async function (req: VercelRequest, resp: VercelResponse) {
   // TODO in production setting check that request or request origin is authorized
   // --- using api routes for REST experience
-  // /api/users/{user}/op1/op2/... -> {"params" : ["opt1", "opt2", ...]}
-  // https://nextjs.org/docs/api-routes/dynamic-api-routes
-  const { params } = req.query;
-  console.log("url is ", req.url);
+  // /api/users/{user}/op1/op2/... -> {id=user, res=opt2, action=opt3} 
+  // this is done in vercel.json
+  log(LogLevel.Debug,` Incoming request: ${req.url}`);
   console.log("req.query has:");
   for(let k in req.query){
     console.log(`"${k}" = ${req.query[k]}`);
   }
 
-  log(LogLevel.Debug,`params is: ${params}`);
   try {
     if (req.method === "GET") {
       log(LogLevel.Debug, `Performing GET on URI ${req.url}`);
-      handleUserGet(params as string[], req, res);
+      handleUserGet( req, resp);
     } else if (req.method === "POST") {
       log(LogLevel.Debug, `Performing POST on URI ${req.url}`);
-      handleUsersPost(params as string[], req, res);
+      handleUsersPost( req, resp);
     } else {
-      res.status(405).json({ error: "This request is not supported" });
+      resp.status(405).json({ error: "This request is not supported" });
     }
   } catch (err) {
     //handle all Okta API errors
     log(
       LogLevel.Production,
-      `Error performing '${req.method}' on URI: ${req.url}' User with id: ${params[0]}, Error : ${err} `
+      `Error performing '${req.method}' on URI: ${req.url}' User with id: ${req.query.id}, Error : ${err} `
     );
-    res.status(err.status || 500).json({ error: `${err}` });
+    resp.status(err.status || 500).json({ error: `${err}` });
   }
 }
 
 async function handleUserGet(
-  params: string[],
   req: VercelRequest,
   res: VercelResponse
 ) {
-  const id = params[0];
+  const id = req.query.id as string;
   const user = await oktaClient.getUser(id);
   let checkResult = {
     managed: user.profile["device_trust"] ? true : false, // this is a custom field so can be undefined
@@ -67,14 +64,13 @@ async function handleUserGet(
 }
 
 async function handleUsersPost(
-  params: string[],
   req: VercelRequest,
   res: VercelResponse
 ) {
-  const id = params[0];
+  const id = req.query.id as string;
   // mimic Okta APIs /api/users/{id}/lifecycle/unsuspend
   log(LogLevel.Debug,`Attempting to unsuspend User with id: ${id}`);
-  if (params.length === 3 && params[2] === "unsuspend") {
+  if ( req.query.action === "unsuspend") {
     const resp = await oktaClient.unsuspendUser(id);
     log(LogLevel.Info, `Success: User with ${id} unsuspended `);
   } else {
