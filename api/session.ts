@@ -10,7 +10,7 @@ const oktaClient = new okta.Client({
   orgUrl: process.env.OKTA_CLIENT_ORGURL,
   token: process.env.OKTA_CLIENT_TOKEN,
   // calling from a function, no need to cache
-  //cacheMiddleware: null
+  cacheMiddleware: null
 });
 
 
@@ -22,21 +22,23 @@ export default async function (req: VercelRequest, res: VercelResponse) {
     };
     res.status(200).json(returnValue);
   } else if (req.method === "POST") {
-    log(LogLevel.Detailed, "incoming post request");
-    log(LogLevel.Detailed,`request parameters ${req.url}`);
+    log(LogLevel.Debug, "incoming post request");
+    log(LogLevel.Debug,`request parameters ${req.url}`);
     // TODO check Authorization - shouldn't process requests not coming from Okta!!
     if (req?.body) {
-      log(LogLevel.Detailed, " --- body ---");
-      log(LogLevel.Detailed, JSON.stringify(req.body, null, 2));
+      log(LogLevel.Debug, " --- body ---");
+      log(LogLevel.Debug, JSON.stringify(req.body, null, 2));
       //look for logout event and suspend user to prevent login
       const events = req.body?.data?.events;
       // Okta can batch events, so if multiple users log out we'll need to 'suspend' them all
-      log(LogLevel.Info,`received ${events.length} events`);
+      // TODO: capture all releveant events and call "suspend user function" asyncronously to return sucess to Okta. 
+      // Is this needed?  Check.
+      log(LogLevel.Info,`received ${events.length} event(s)`);
       for(let i in events){
         log(LogLevel.Info,`Processing event #${i}: ${events[i].eventType} for user with id: ${events[i].actor.id}`);
         if (events[i].eventType === "user.session.end") {
           let resp = await suspendUser(events[i].actor.id);
-          log(LogLevel.Info,`suspendUser returned: ${resp}`);
+          log(LogLevel.Info,`Success: User suspended`);
         }
       }
     }
@@ -46,14 +48,19 @@ export default async function (req: VercelRequest, res: VercelResponse) {
   }
 }
 
-async function suspendUser(id: string) {
-  log(LogLevel.Detailed,`Trying to suspend a User with id "${id}", OrgUrl is: ${oktaClient.baseUrl}`);
+async function suspendUser(id: string): Promise<boolean> {
+  log(LogLevel.Debug,`Checking - is User subject to Device Trust?`);
   try {
-    let resp = await oktaClient.suspendUser(id);
-    log(LogLevel.Detailed,`Success suspending User with id "${id}"), response: ${resp} `);
-    return true;
+    const user = await oktaClient.getUser(id);
+    if(user.profile["device_trust"]){
+      log(LogLevel.Debug,`Trying to suspend a User with id "${id}"`);
+      let resp = await oktaClient.suspendUser(id);
+      log(LogLevel.Info,`Success: User with id "${id}" suspended`);
+      return true;
+    }
+    log(LogLevel.Debug,`User with id: ${id} is not subject to Device Trust Rules`);
   } catch (err) {
     log(LogLevel.Production,`Error suspending User with id(${id}), received: ${err} `);
-    return false;
   }
+  return false;
 }
