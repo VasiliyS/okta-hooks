@@ -1,6 +1,0 @@
-{
-    "rewrites": [
-      { "source": "/api/users/:id/:resource?/:action?", "destination": "/api/users" }
-      
-    ]
-  }
