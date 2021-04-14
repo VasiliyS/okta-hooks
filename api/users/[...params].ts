@@ -18,6 +18,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
   // /api/users/{user}/op1/op2/... -> {"params" : ["opt1", "opt2", ...]}
   // https://nextjs.org/docs/api-routes/dynamic-api-routes
   const { params } = req.query;
+  log(LogLevel.Debug,`params is: ${params}, query: ${req.query}`)
   try {
     if (req.method === "GET") {
       log(LogLevel.Debug, `Performing GET on URI ${req.url}`);
